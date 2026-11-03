@@ -2,6 +2,14 @@
   "name": "dsh-sidebar-expand-all",
   "version": "1.0.0",
   "description": "DSH 侧栏会话列表补丁：点一次「展开其余 N 个会话」就展开该工作区全部会话，「收起」严格回到 5 个。One-click expand-all for the DSH sidebar session list, with a strict collapse-to-5. · DeepSeek Harness 桌面版插件。",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mzjqwq/dsh-sidebar-expand-all.git"
+  },
+  "homepage": "https://github.com/mzjqwq/dsh-sidebar-expand-all#readme",
+  "bugs": {
+    "url": "https://github.com/mzjqwq/dsh-sidebar-expand-all/issues"
+  },
   "type": "module",
   "main": "lib/index.js",
   "exports": {

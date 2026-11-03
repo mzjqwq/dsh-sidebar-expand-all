@@ -41,7 +41,7 @@ dsh plugin --profile desktop add ./dsh-sidebar-expand-all
 Or add the repository directly:
 
 ```bash
-dsh plugin --profile desktop add github:<owner>/dsh-sidebar-expand-all
+dsh plugin --profile desktop add github:mzjqwq/dsh-sidebar-expand-all
 ```
 
 ## Use

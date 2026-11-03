@@ -44,7 +44,7 @@ dsh plugin --profile desktop add ./dsh-sidebar-expand-all
 直接从 GitHub 仓库：
 
 ```bash
-dsh plugin --profile desktop add github:<owner>/dsh-sidebar-expand-all
+dsh plugin --profile desktop add github:mzjqwq/dsh-sidebar-expand-all
 ```
 
 ## 使用
