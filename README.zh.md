@@ -8,6 +8,12 @@
 
 > English: [README.md](./README.md)
 
+## 两种运行路径的差异
+
+从 DSH **宿主插件**（插件自带的 `/dsh-sidebar-expand-all` 控制页）调用时，代码跑在 Electron 里：Electron 会把 `app.asar` 当成**目录**——`statSync().isFile()` 返回 `false`，`openSync()` 直接抛 `ENOENT`。所以本包一旦检测到 `process.versions.electron`，就改用 Electron 的 `original-fs` 读取（并用 `process.noAsar` 兜底）。在普通终端里跑 CLI 时仍走普通 `node:fs`。两条路径都在真实安装上验证过。
+
+> 插件市场的安装按钮生成的是 `--profile web`。在 DSH 桌面版上请改用 `--profile desktop`——那才是应用真正启动的 profile。
+
 ## 它改了什么
 
 DSH 给每个工作区维护一个「水位线」——该组显示多少个会话。上游逻辑每次点击加 `SESSION_WATERMARK_BASE = 5`；折叠基线又会被 `Math.max(...)` 抬高（为了让运行中/未读会话可见），所以收起后往往不止 5 个。

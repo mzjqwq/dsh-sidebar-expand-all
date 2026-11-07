@@ -1,6 +1,6 @@
 {
   "name": "dsh-sidebar-expand-all",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Expanded-by-default DSH sidebar sessions: one click reveals every remaining session, collapse returns to exactly 5.",
   "repository": {
     "type": "git",

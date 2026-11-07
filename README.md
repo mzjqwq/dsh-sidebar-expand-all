@@ -6,6 +6,12 @@ DSH 侧栏默认只展开 5 个会话；这个插件让它**默认全部展开**
 
 > 中文说明见 [README.zh.md](./README.zh.md)。
 
+## A note on the two run paths
+
+If you run this from a DSH **host plugin** (the packaged `/dsh-sidebar-expand-all` control page), the code runs inside Electron, where `node:fs` resolves `app.asar` as a *directory* — `statSync().isFile()` is `false` and `openSync()` throws `ENOENT`. This package therefore reads the archive through Electron's `original-fs` (falling back to `process.noAsar`) whenever it detects `process.versions.electron`. If you patch from a plain terminal, the ordinary `node:fs` path is used instead. Both were verified against a real install.
+
+> The marketplace renders its install button with `--profile web`. On DSH Desktop, use `--profile desktop` instead — that is the profile the app actually boots.
+
 ## What it changes
 
 DSH stores a per-workspace "watermark": how many sessions of a group are visible. The upstream UI advances it by `SESSION_WATERMARK_BASE = 5` on every click, and the collapsed baseline is raised whenever a running or unread session must stay visible.
