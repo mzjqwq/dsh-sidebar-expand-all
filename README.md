@@ -66,6 +66,8 @@ http://127.0.0.1:<your DSH port>/dsh-sidebar-expand-all
 
 You get the current status of all four patches plus **Apply**, **Restore** and **Refresh** buttons.
 
+> Installing the plugin does **not** modify anything by itself — it only serves this page and ships the CLI. Nothing is written to `app.asar` until you press **Apply** (or run the CLI without flags). Review what it will change first, then apply and restart DSH.
+
 ### CLI
 
 ```bash
