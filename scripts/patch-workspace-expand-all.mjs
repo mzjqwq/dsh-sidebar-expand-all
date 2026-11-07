@@ -8,12 +8,32 @@
  *   node patch-workspace-expand-all.mjs --restore  # 还原官方文件
  *
  * 退出码：0 正常；2 找不到 asar/备份；3 内容与 header integrity 不一致；4 --check 发现不一致。
- * 环境变量：DSH_ASAR 指定 app.asar；DSH_BAK 指定备份目录。
+ *
+ * 路径选项（都可省略；省略时自动定位真实安装）：
+ *   --asar <path>  指定 app.asar
+ *   --bak  <path>  指定备份目录
+ * 等价的環境变量：DSH_ASAR、DSH_BAK。显式选项优先于环境变量。
  */
 import { ENTRY, PATCHES, apply, inspect, restore } from './lib/asar-patch.js';
 
 const args = process.argv.slice(2);
 const flag = (name) => args.includes(name);
+
+/** 取 `--name value` 的值；缺值时报错退出，避免静默回落到真实安装。 */
+function option(name) {
+  const at = args.indexOf(name);
+  if (at === -1) return undefined;
+  const value = args[at + 1];
+  if (!value || value.startsWith('--')) {
+    console.error(`${name} 需要一个路径参数，已中止（不会回落到默认安装路径）。`);
+    process.exit(2);
+  }
+  return value;
+}
+
+const asarOption = option('--asar');
+const bakOption = option('--bak');
+const target = { asarPath: asarOption, backupDir: bakOption };
 
 function printStatus(info) {
   if (!info.available) {
@@ -46,12 +66,12 @@ if (flag('--list')) {
 }
 
 if (flag('--help') || flag('-h')) {
-  console.log('用法: node patch-workspace-expand-all.mjs [--check|--restore|--list|--help]');
+  console.log('用法: node patch-workspace-expand-all.mjs [--check|--restore|--list|--help] [--asar <path>] [--bak <path>]');
   process.exit(0);
 }
 
 if (flag('--check')) {
-  const info = inspect();
+  const info = inspect({ asarPath: asarOption });
   const code = printStatus(info);
   if (code) process.exit(code);
   process.exit(info.headerOk === false ? 4 : 0);
@@ -59,7 +79,7 @@ if (flag('--check')) {
 
 if (flag('--restore')) {
   try {
-    const result = restore();
+    const result = restore(target);
     console.log(`已还原: ${result.asarPath}`);
     console.log(`备份: ${result.backupDir}`);
     console.log('请完全退出并重新打开 DSH 才生效。');
@@ -71,7 +91,7 @@ if (flag('--restore')) {
 }
 
 try {
-  const result = apply();
+  const result = apply(target);
   if (result.already?.length && !result.applied?.length) {
     console.log('补丁已经是应用状态，无需修改。');
     console.log(`asar: ${result.asarPath}`);
