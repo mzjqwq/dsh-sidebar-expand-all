@@ -96,7 +96,8 @@ The plugin also installs a user-level skill to `~/.dsh/skills/dsh-sidebar-expand
 ```bash
 node --check lib/asar-patch.js
 node --check lib/index.js
-node scripts/patch-workspace-expand-all.mjs --check
+node scripts/patch-workspace-expand-all.mjs --check   # read-only: is the patch applied?
+node scripts/smoke-plugin.mjs                         # loads both halves, asserts the patch set fits
 ```
 
 `lib/asar-patch.js` is dependency-free and can be used outside the plugin.

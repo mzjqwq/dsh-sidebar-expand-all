@@ -100,7 +100,8 @@ DSH 宿主启动时把每个 client bundle 缓存在内存，`dsh-client-hmr` �
 ```bash
 node --check lib/asar-patch.js
 node --check lib/index.js
-node scripts/patch-workspace-expand-all.mjs --check
+node scripts/patch-workspace-expand-all.mjs --check   # 只读：补丁是否已应用
+node scripts/smoke-plugin.mjs                         # 冒烟：加载两半代码并断言补丁长度可容纳
 ```
 
 `lib/asar-patch.js` 无依赖，可以脱离插件单独使用。
