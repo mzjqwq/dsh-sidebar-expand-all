@@ -17,17 +17,30 @@ description: 给 DeepSeek Harness 桌面版打侧栏会话列表补丁：点一�
 - asar：桌面版默认 `<DeepSeek Harness.exe 所在目录>/resources/app.asar`；可用 `DSH_ASAR` 覆盖。
 - 条目：`dsh/node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/client.js`
 
-两处等长替换：
+四处等长替换（v1.0.1 起）：
 
-1. **expand-all**（点击「展开其余」的分支）：
-   `visible.hiddenCount <= SESSION_WATERMARK_BASE ? Infinity : watermark + SESSION_WATERMARK_BASE`
-   → `Number.POSITIVE_INFINITY`
-   效果：点击时把该组 watermark 写成 Infinity，一次展开全部剩余会话；「收起」仍走 `dropWatermarks`。
+1. **toggle-all**（点击「展开其余」的整个 onClick 块，含收起分支）：
+   原文是 `if (sessionsExpanded) { dropWatermarks(...); return; }` + 三元 `visible.hiddenCount <= SESSION_WATERMARK_BASE ? Infinity : watermark + SESSION_WATERMARK_BASE`；
+   改为一行 `setStoredWatermarks((marks) => ({ ...marks, [group.key]: sessionsExpanded ? SESSION_WATERMARK_BASE : Number.POSITIVE_INFINITY }));`
+   效果：点一次「展开其余 N 个会话」把该组 watermark 写成 Infinity（剩余全部展开），点「收起」写回 5（**不再 dropWatermarks**——drop 会让 watermark 落回默认值，重启后又变回 5）。
 
-2. **collapse-to-5**（折叠基线）：
+2. **collapse-baseline**（折叠基线）：
    `Math.max(SESSION_WATERMARK_BASE, requiredWatermark(group.sessions, current, group.key === revealGroup ? revealSessionId : void 0))`
    → `SESSION_WATERMARK_BASE`
    效果：`baselines` 恒为 5 → `requiredWatermarks` 恒为 5 → 收起后严格显示 5 个，`sessionsExpanded` 判断不受影响。
+
+3. **default-expanded**（渲染时的默认值）：
+   `const watermark = sessionWatermarks[group.key] ?? SESSION_WATERMARK_BASE;`
+   → `const watermark = sessionWatermarks[group.key] ?? Infinity;`
+   效果：**默认全展开**——没有手动收起过的工作区（`storedWatermarks` 里没有该 key）显示全部会话。
+
+4. **default-expanded-drag**（拖拽排序取可见行）：
+   `sessionWatermarks[group.key] ?? SESSION_WATERMARK_BASE).rows`
+   → `sessionWatermarks[group.key] ?? Infinity).rows`
+   效果：拖拽时的 `renderedSessions` 与实际渲染一致，避免全展开状态下拖到不可见行。
+
+> **为什么必须加 3、4（默认全展开）**：官方的 watermark 存在 `const [storedWatermarks, setStoredWatermarks] = useState({})` 里，**只存在组件内存**，既没有持久化（`dsh.workspace.view.v5` 只存 groupBy/orderBy/groupExpansion/sessionOrderByAccount/archivedFilter），组件重挂载（切工作区、切页、重启）就会丢。
+> 只改补丁 1、2 时，重启后侧栏又变回 5 个，用户看到的就是「展开又不生效了」。把默认值改成 `Infinity` 才是真正的「一直全部展开」。
 
 ## 两种用法
 
@@ -67,10 +80,10 @@ node scripts/patch-workspace-expand-all.mjs --restore  # 还原官方文件
 
 ## 验证
 
-1. `--check`：两处补丁「已应用」且 header hash 与实际内容一致。
+1. `--check`：四处补丁「已应用」且 header hash 与实际内容一致。
 2. 从 asar 提取 client.js：`node --check` 通过。
 3. 遍历所有 entry 校验 integrity：`bad=0`。
-4. 重启后：点一次「展开其余 N 个会话」应一次全展开；点「收起」严格 5 个。
+4. 重启后：**默认就是全部展开**；点「收起」严格 5 个；再点一次「展开其余 N 个会话」一次全展开；再重启仍保持（默认值即 Infinity）。
 
 ## 重启 DSH
 

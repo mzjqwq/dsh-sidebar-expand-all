@@ -1,7 +1,7 @@
 {
   "name": "dsh-sidebar-expand-all",
-  "version": "1.0.0",
-  "description": "One-click expand-all for every remaining session in a DSH workspace, with a strict collapse-to-5.",
+  "version": "1.0.1",
+  "description": "Expanded-by-default DSH sidebar sessions: one click reveals every remaining session, collapse returns to exactly 5.",
   "repository": {
     "type": "git",
     "url": "https://github.com/mzjqwq/dsh-sidebar-expand-all.git"

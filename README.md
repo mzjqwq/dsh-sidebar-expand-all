@@ -1,8 +1,8 @@
 # dsh-sidebar-expand-all
 
-One-click **expand all** for the DeepSeek Harness sidebar — and a strict **collapse to 5**.
+One-click **expand all** for the DeepSeek Harness sidebar — expanded by default, with a strict **collapse to 5**.
 
-DSH 侧栏一次只展开 5 个会话；这个插件让「展开其余 N 个会话」点一次就展开该工作区**全部**会话，点「收起」严格回到 5 个。
+DSH 侧栏默认只展开 5 个会话；这个插件让它**默认全部展开**，「展开其余 N 个会话」点一次展开该工作区**全部**剩余会话，点「收起」严格回到 5 个。
 
 > 中文说明见 [README.zh.md](./README.zh.md)。
 
@@ -10,7 +10,9 @@ DSH 侧栏一次只展开 5 个会话；这个插件让「展开其余 N 个会�
 
 DSH stores a per-workspace "watermark": how many sessions of a group are visible. The upstream UI advances it by `SESSION_WATERMARK_BASE = 5` on every click, and the collapsed baseline is raised whenever a running or unread session must stay visible.
 
-This plugin applies two **same-length** patches to the bundled client at
+That watermark lives **only in React component state** (`useState({})` — not persisted, reset on remount), so patching just the click handler makes the sidebar fall back to 5 sessions after a restart. Hence the default is patched to `Infinity` too.
+
+This plugin applies four **same-length** patches to the bundled client at
 
 ```
 app.asar
@@ -19,10 +21,12 @@ app.asar
 
 | Patch | Official code | Patched code | Effect |
 | --- | --- | --- | --- |
-| `expand-all` | `visible.hiddenCount <= SESSION_WATERMARK_BASE ? Infinity : watermark + SESSION_WATERMARK_BASE` | `Number.POSITIVE_INFINITY` | one click reveals every remaining session |
-| `collapse-to-5` | `Math.max(SESSION_WATERMARK_BASE, requiredWatermark(...))` | `SESSION_WATERMARK_BASE` | collapse always shows exactly 5 |
+| `toggle-all` | the whole `onClick` (`if (sessionsExpanded) { dropWatermarks(...); return; }` plus the `visible.hiddenCount <= SESSION_WATERMARK_BASE ? Infinity : watermark + SESSION_WATERMARK_BASE` ternary) | `setStoredWatermarks((marks) => ({ ...marks, [group.key]: sessionsExpanded ? SESSION_WATERMARK_BASE : Number.POSITIVE_INFINITY }))` | one click reveals every remaining session; collapse writes back 5 |
+| `collapse-baseline` | `Math.max(SESSION_WATERMARK_BASE, requiredWatermark(...))` | `SESSION_WATERMARK_BASE` | collapse always shows exactly 5 |
+| `default-expanded` | `const watermark = sessionWatermarks[group.key] ?? SESSION_WATERMARK_BASE;` | `... ?? Infinity;` | **expanded by default** |
+| `default-expanded-drag` | `sessionWatermarks[group.key] ?? SESSION_WATERMARK_BASE).rows` | `... ?? Infinity).rows` | drag ordering uses the same visible rows |
 
-Both replacements are padded with spaces so the file size does not change, and the entry's `integrity.hash` (and `blocks[0].hash`) in the asar header is updated in place. Any change to file length would corrupt every following entry in the archive.
+All replacements are padded with spaces so the file size does not change, and the entry's `integrity.hash` (and `blocks[0].hash`) in the asar header is updated in place. Any change to file length would corrupt every following entry in the archive.
 
 ## Install
 
@@ -54,7 +58,7 @@ After DSH starts, open
 http://127.0.0.1:<your DSH port>/dsh-sidebar-expand-all
 ```
 
-You get the current patch status plus **Apply**, **Restore** and **Refresh** buttons.
+You get the current status of all four patches plus **Apply**, **Restore** and **Refresh** buttons.
 
 ### CLI
 
@@ -81,7 +85,7 @@ The DSH host caches every client bundle in memory at startup, and `dsh-client-hm
 
 ## Upgrades
 
-A DSH upgrade replaces `app.asar` as a whole, so the patch disappears. Re-run **Apply** (or the CLI) after upgrading. If the anchors changed in a new DSH release, the status becomes `unsupported`; the two expressions above must then be re-located in the new `client.js`.
+A DSH upgrade replaces `app.asar` as a whole, so the patch disappears. Re-run **Apply** (or the CLI) after upgrading. If the anchors changed in a new DSH release, the status becomes `unsupported`; the four expressions above must then be re-located in the new `client.js`.
 
 ## Bundled skill
 

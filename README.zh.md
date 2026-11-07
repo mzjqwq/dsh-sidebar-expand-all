@@ -2,7 +2,8 @@
 
 深色侧栏里会话很多时，DSH 默认每点一次「展开其余 N 个会话」只多展开 5 个，几十个会话要点很多次；点「收起」后也常常回不到 5 个。这个插件把它改成：
 
-- **点一次就展开该工作区的全部会话**；
+- **默认就全部展开**（打开侧栏就是全部会话，重启 DSH 也不会变回 5 个）；
+- **点一次「展开其余 N 个会话」展开该工作区的全部剩余会话**；
 - **点「收起」严格回到 5 个**。
 
 > English: [README.md](./README.md)
@@ -11,6 +12,8 @@
 
 DSH 给每个工作区维护一个「水位线」——该组显示多少个会话。上游逻辑每次点击加 `SESSION_WATERMARK_BASE = 5`；折叠基线又会被 `Math.max(...)` 抬高（为了让运行中/未读会话可见），所以收起后往往不止 5 个。
 
+而且这个水位线**只存在 React 组件内存里**（`useState({})`，不持久化、组件重挂载即丢），所以只改点击逻辑的话，重启/切工作区后又会变回 5 个。
+
 插件对 asar 内的
 
 ```
@@ -18,12 +21,14 @@ app.asar
 └─ dsh/node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/client.js
 ```
 
-做两处**等长**替换：
+做四处**等长**替换：
 
 | 补丁 | 官方原文 | 替换为 | 效果 |
 | --- | --- | --- | --- |
-| `expand-all` | `visible.hiddenCount <= SESSION_WATERMARK_BASE ? Infinity : watermark + SESSION_WATERMARK_BASE` | `Number.POSITIVE_INFINITY` | 点一次展开全部剩余会话 |
-| `collapse-to-5` | `Math.max(SESSION_WATERMARK_BASE, requiredWatermark(...))` | `SESSION_WATERMARK_BASE` | 收起后严格 5 个 |
+| `toggle-all` | 整段 `onClick`（`if (sessionsExpanded) { dropWatermarks(...); return; }` + 三元 `visible.hiddenCount <= SESSION_WATERMARK_BASE ? Infinity : watermark + SESSION_WATERMARK_BASE`） | `setStoredWatermarks((marks) => ({ ...marks, [group.key]: sessionsExpanded ? SESSION_WATERMARK_BASE : Number.POSITIVE_INFINITY }))` | 点一次展开全部剩余会话；点「收起」写回 5（不再 drop） |
+| `collapse-baseline` | `Math.max(SESSION_WATERMARK_BASE, requiredWatermark(...))` | `SESSION_WATERMARK_BASE` | 收起后严格 5 个 |
+| `default-expanded` | `const watermark = sessionWatermarks[group.key] ?? SESSION_WATERMARK_BASE;` | `... ?? Infinity;` | **默认全展开** |
+| `default-expanded-drag` | `sessionWatermarks[group.key] ?? SESSION_WATERMARK_BASE).rows` | `... ?? Infinity).rows` | 拖拽排序与渲染一致 |
 
 替换用空格填充到原长度（文件大小不变），并原地更新 asar header 里该条目的 `integrity.hash` 与 `blocks[0].hash`。asar 的 header 记录每个条目的 offset/size，任何长度变化都会让后续所有条目错位，所以必须等长替换。
 
@@ -84,7 +89,7 @@ DSH 宿主启动时把每个 client bundle 缓存在内存，`dsh-client-hmr` �
 
 ## DSH 升级之后
 
-升级会整体替换 `app.asar`，补丁随之消失，升级后重新点一次「应用补丁」即可。如果新版本源码结构变了、两处原文找不到，状态会变成 `unsupported`，需要按新版 `client.js` 重新定位这两处表达式。
+升级会整体替换 `app.asar`，补丁随之消失，升级后重新点一次「应用补丁」即可。如果新版本源码结构变了、四处原文找不到，状态会变成 `unsupported`，需要按新版 `client.js` 重新定位这四处表达式。
 
 ## 随包 SKILL
 
