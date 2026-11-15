@@ -27,10 +27,10 @@ app.asar
 
 | Patch | Official code | Patched code | Effect |
 | --- | --- | --- | --- |
-| `toggle-all` | the whole `onClick` (`if (sessionsExpanded) { dropWatermarks(...); return; }` plus the `visible.hiddenCount <= SESSION_WATERMARK_BASE ? Infinity : watermark + SESSION_WATERMARK_BASE` ternary) | `setStoredWatermarks((marks) => ({ ...marks, [group.key]: sessionsExpanded ? SESSION_WATERMARK_BASE : Number.POSITIVE_INFINITY }))` | one click reveals every remaining session; collapse writes back 5 |
-| `collapse-baseline` | `Math.max(SESSION_WATERMARK_BASE, requiredWatermark(...))` | `SESSION_WATERMARK_BASE` | collapse always shows exactly 5 |
-| `default-expanded` | `const watermark = sessionWatermarks[group.key] ?? SESSION_WATERMARK_BASE;` | `... ?? Infinity;` | **expanded by default** |
-| `default-expanded-drag` | `sessionWatermarks[group.key] ?? SESSION_WATERMARK_BASE).rows` | `... ?? Infinity).rows` | drag ordering uses the same visible rows |
+| `toggle-all` | the whole `onClick` (`if (sessionsExpanded) { dropWatermarks(...); return; }` plus the `visible.hiddenCount<=SESSION_WATERMARK_BASE?Infinity:watermark+SESSION_WATERMARK_BASE` ternary) | `setStoredWatermarks(marks=>({...marks,[group.key]:sessionsExpanded?SESSION_WATERMARK_BASE:Infinity}))` | one click reveals every remaining session; collapse writes back 5 |
+| `collapse-baseline` | `Math.max(SESSION_WATERMARK_BASE,requiredWatermark(...))` | `SESSION_WATERMARK_BASE` | collapse always shows exactly 5 |
+| `default-expanded` | `const watermark=sessionWatermarks[group.key]??SESSION_WATERMARK_BASE;` | `... ?? Infinity;` | **expanded by default** |
+| `default-expanded-drag` | `sessionWatermarks[group.key]??SESSION_WATERMARK_BASE).rows` | `... ?? Infinity).rows` | drag ordering uses the same visible rows |
 
 All replacements are padded with spaces so the file size does not change, and the entry's `integrity.hash` (and `blocks[0].hash`) in the asar header is updated in place. Any change to file length would corrupt every following entry in the archive.
 

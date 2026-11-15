@@ -31,10 +31,10 @@ app.asar
 
 | 补丁 | 官方原文 | 替换为 | 效果 |
 | --- | --- | --- | --- |
-| `toggle-all` | 整段 `onClick`（`if (sessionsExpanded) { dropWatermarks(...); return; }` + 三元 `visible.hiddenCount <= SESSION_WATERMARK_BASE ? Infinity : watermark + SESSION_WATERMARK_BASE`） | `setStoredWatermarks((marks) => ({ ...marks, [group.key]: sessionsExpanded ? SESSION_WATERMARK_BASE : Number.POSITIVE_INFINITY }))` | 点一次展开全部剩余会话；点「收起」写回 5（不再 drop） |
-| `collapse-baseline` | `Math.max(SESSION_WATERMARK_BASE, requiredWatermark(...))` | `SESSION_WATERMARK_BASE` | 收起后严格 5 个 |
-| `default-expanded` | `const watermark = sessionWatermarks[group.key] ?? SESSION_WATERMARK_BASE;` | `... ?? Infinity;` | **默认全展开** |
-| `default-expanded-drag` | `sessionWatermarks[group.key] ?? SESSION_WATERMARK_BASE).rows` | `... ?? Infinity).rows` | 拖拽排序与渲染一致 |
+| `toggle-all` | 整段 `onClick`（`if (sessionsExpanded) { dropWatermarks(...); return; }` + 三元 `visible.hiddenCount<=SESSION_WATERMARK_BASE?Infinity:watermark+SESSION_WATERMARK_BASE`） | `setStoredWatermarks(marks=>({...marks,[group.key]:sessionsExpanded?SESSION_WATERMARK_BASE:Infinity}))` | 点一次展开全部剩余会话；点「收起」写回 5（不再 drop） |
+| `collapse-baseline` | `Math.max(SESSION_WATERMARK_BASE,requiredWatermark(...))` | `SESSION_WATERMARK_BASE` | 收起后严格 5 个 |
+| `default-expanded` | `const watermark=sessionWatermarks[group.key]??SESSION_WATERMARK_BASE;` | `... ?? Infinity;` | **默认全展开** |
+| `default-expanded-drag` | `sessionWatermarks[group.key]??SESSION_WATERMARK_BASE).rows` | `... ?? Infinity).rows` | 拖拽排序与渲染一致 |
 
 替换用空格填充到原长度（文件大小不变），并原地更新 asar header 里该条目的 `integrity.hash` 与 `blocks[0].hash`。asar 的 header 记录每个条目的 offset/size，任何长度变化都会让后续所有条目错位，所以必须等长替换。
 
