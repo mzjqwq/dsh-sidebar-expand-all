@@ -17,7 +17,7 @@ description: 给 DeepSeek Harness 桌面版打侧栏会话列表补丁：点一�
 - asar：桌面版默认 `<DeepSeek Harness.exe 所在目录>/resources/app.asar`；可用 `DSH_ASAR` 覆盖。
 - 条目：`dsh/node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/client.js`
 
-四处等长替换（v1.0.1 起）：
+四处等长替换（表达式按 0.2.2-rc.3 压缩格式定位，v1.0.1 起思路不变）：
 
 1. **toggle-all**（点击「展开其余」的整个 onClick 块，含收起分支）：
    原文是 `if (sessionsExpanded) { dropWatermarks(...); return; }` + 三元 `visible.hiddenCount<=SESSION_WATERMARK_BASE?Infinity:watermark+SESSION_WATERMARK_BASE`（新版压缩格式无空格）；
